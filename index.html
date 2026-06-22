@@ -145,6 +145,10 @@
       break-inside:avoid;
       page-break-inside:avoid;
     }
+    .section-03-page-break{
+      break-before:page;
+      page-break-before:always;
+    }
     .section-title{
       display:flex;
       align-items:center;
@@ -810,6 +814,18 @@
     body.exporting-pdf .toast-notify,
     body.exporting-pdf .modal-overlay,
     body.exporting-pdf #sticky-menu { display: none !important; }
+
+    /* PDF出力時はtextareaを完全展開・クリップなし */
+    body.exporting-pdf textarea.box-input {
+      overflow: visible !important;
+      resize: none !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+    }
+    body.exporting-pdf table.log-table td,
+    body.exporting-pdf table.log-table th {
+      overflow: visible !important;
+    }
 
     body.exporting-pdf .accordion-icon,
     body.exporting-pdf .post-cook-open-hint,
@@ -1960,7 +1976,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section class="section section-03-page-break">
         ${sectionTitle('03','材料・分量の検証ログ')}
         <p class="subtle-lead">「当日変更」には調理中に調整した材料や分量を記入し、「次回反映事項」には、次回レシピに反映すると決めた材料・分量だけを書いてください。迷っている内容は08「未決事項・AIへの相談」に書きます。</p>
         ${renderIngredientTable(data.ingr)}
@@ -2249,7 +2265,6 @@
     const printBtn = document.getElementById('printBtn');
     if (printBtn) {
       printBtn.addEventListener('click', async () => {
-        document.querySelectorAll('textarea.box-input').forEach(autoResizeTextarea);
 
         if (!window.html2canvas || !window.jspdf) {
           showToast('PDF生成の準備をしています...');
@@ -2288,7 +2303,30 @@
 
         document.body.classList.add('exporting-pdf');
 
-        await new Promise(r => setTimeout(r, 500));
+        // textarea を div に一時置換（html2canvas はtextareaの非表示部分をキャプチャできないため）
+        const textareaReplacements = [];
+        container.querySelectorAll('textarea.box-input').forEach(el => {
+          const div = document.createElement('div');
+          // クラスとスタイルを引き継ぐ
+          div.className = el.className;
+          div.style.cssText = el.style.cssText;
+          div.style.height = 'auto';
+          div.style.minHeight = (el.getAttribute('data-min-height') || '70') + 'px';
+          div.style.overflow = 'visible';
+          div.style.whiteSpace = 'pre-wrap';
+          div.style.wordBreak = 'break-word';
+          div.style.overflowWrap = 'break-word';
+          div.style.resize = 'none';
+          div.style.display = 'block';
+          // テキスト内容をセット（空なら空文字）
+          div.textContent = el.value || '';
+          el.parentNode.insertBefore(div, el);
+          el.style.display = 'none';
+          textareaReplacements.push({ original: el, replacement: div });
+        });
+
+        // リフロー完了を待つ
+        await new Promise(r => setTimeout(r, 600));
 
         try {
           const canvas = await window.html2canvas(container, {
@@ -2328,7 +2366,7 @@
           const protectSelectors = [
             '.sheet-header',
             '.goal-block',
-            'table.log-table',
+            'table.log-table tr',  // テーブル全体ではなく行単位で保護
             '.method-step',
             '.fix-axis-block',
             '.undecided-note',
@@ -2351,6 +2389,8 @@
                 bottom: getCanvasY(rect) + getCanvasHeight(rect)
               };
             })
+            // 1ページの80%を超える要素は保護対象外（自体が1ページに収まらない）
+            .filter(zone => (zone.bottom - zone.top) < usableHeightPx * 0.8)
             .sort((a, b) => a.top - b.top);
 
           let dividerY = -1;
@@ -2464,6 +2504,14 @@
           showToast('エラー: ' + (error.message || 'PDFの生成に失敗しました'));
         } finally {
           document.body.classList.remove('exporting-pdf');
+
+          // textarea を元に戻す（div を削除し textarea を再表示）
+          textareaReplacements.forEach(({ original, replacement }) => {
+            original.style.display = '';
+            if (replacement.parentNode) replacement.parentNode.removeChild(replacement);
+            autoResizeTextarea(original);
+          });
+
           const postCookContentEl = document.getElementById('post-cook-content');
           if (postCookContentEl && wasPostCookHidden) postCookContentEl.classList.add('hidden');
           accordionStates.forEach(state => {
