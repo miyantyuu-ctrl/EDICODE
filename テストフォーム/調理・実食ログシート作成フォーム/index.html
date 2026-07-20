@@ -1,0 +1,2579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDICODE｜調理・実食ログシート作成フォーム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <style>
+    :root{
+      --brand-navy:#182349;
+      --brand-navy-hover:#25325d;
+      --paper:#ffffff;
+      --bg:#f3f4f6;
+      --line:#cbd5e1;
+      --muted:#475569;
+      --soft:#f8fafc;
+      --accent:#c95742;
+      --accent-soft:#fff7f3;
+      --reflect:#e6f4ff;
+      --reflect-line:#74bfff;
+      --reflect-text:#075985;
+      --gold:#9a6a1d;
+      --gold-dark:#6f4b12;
+      --gold-soft:#fbf6e8;
+      --undecided:#fff8e6;
+      --undecided-line:#f3d38b;
+      --undecided-text:#7a4d00;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      font-family:'Inter','Noto Sans JP',sans-serif;
+      background:#eef1f6;
+      color:#111827;
+      margin:0;
+      padding:0;
+    }
+
+    .no-print{}
+    .toast-notify{
+      position:fixed;
+      top:24px;
+      left:50%;
+      transform:translateX(-50%);
+      background:var(--brand-navy);
+      color:white;
+      padding:12px 24px;
+      border-radius:999px;
+      font-size:.85rem;
+      font-weight:900;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      z-index:99999;
+      pointer-events: none;
+      display:none;
+    }
+
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100000;
+      padding:16px;
+    }
+    .modal-content{
+      background:white;
+      border-radius:24px;
+      padding:28px;
+      width:min(92vw,680px);
+      max-height:85vh;
+      overflow:auto;
+    }
+
+    .a4-page{
+      background:var(--paper);
+      width:210mm;
+      min-height:297mm;
+      margin:20px auto;
+      padding:15mm;
+      box-shadow:0 10px 18px rgba(0,0,0,.12);
+      position:relative;
+    }
+
+    .sheet-header{
+      display:flex;
+      justify-content:space-between;
+      gap:24px;
+      align-items:flex-start;
+      border-bottom:8px solid var(--brand-navy);
+      padding-bottom:24px;
+      margin-bottom:28px;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfcff 100%);
+    }
+    .sheet-logo-group{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      align-items:flex-start;
+    }
+    .sheet-logo{
+      font-size:48px;
+      line-height:1;
+      letter-spacing:-.06em;
+      font-weight:900;
+      color:var(--brand-navy);
+    }
+    .sheet-subtitle{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid #d7b56d;
+      background:var(--gold-soft);
+      color:var(--gold-dark);
+      font-size:11px;
+      line-height:1;
+      letter-spacing:.10em;
+      font-weight:900;
+    }
+    .sheet-title{
+      text-align:right;
+      color:var(--brand-navy);
+      font-size:22px;
+      font-weight:900;
+      line-height:1.35;
+      margin-bottom:10px;
+      word-break:break-word;
+      letter-spacing:.01em;
+    }
+    .sheet-meta{
+      text-align:right;
+      font-size:10px;
+      line-height:1.5;
+      font-weight:900;
+      color:#6b7280;
+    }
+
+    .section{
+      margin:0 0 24px 0;
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+    .section-03-page-break{
+      break-before:page;
+      page-break-before:always;
+    }
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      background:var(--brand-navy);
+      color:#fff;
+      padding:12px 15px;
+      border-radius:10px;
+      font-size:15px;
+      line-height:1.35;
+      font-weight:900;
+      margin-bottom:14px;
+      letter-spacing:.01em;
+      box-shadow:0 5px 14px rgba(24,35,73,.14);
+    }
+    .section-title .num{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:36px;
+      height:26px;
+      padding:0 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      color:#fff;
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    .subtle-lead{
+      font-size:12px;
+      line-height:1.7;
+      color:#6b7280;
+      font-weight:700;
+      margin:0 0 12px;
+    }
+
+    .post-cook-divider{
+      width:100%;
+      margin:34px 0 18px;
+      border:1.5px solid #d7b56d;
+      border-left:0;
+      border-radius:18px;
+      background:linear-gradient(180deg, #f7f0d8 0%, #fbf6e8 100%);
+      padding:0;
+      overflow:hidden;
+      color:#5f4212;
+      font-family:inherit;
+      font-weight:900;
+      text-align:left;
+      cursor:pointer;
+      break-inside:avoid;
+      page-break-inside:avoid;
+      box-shadow:0 8px 22px rgba(95,66,18,0.10);
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .post-cook-divider:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 28px rgba(95,66,18,0.16);
+      border-color:#b98a2b;
+    }
+    .post-cook-divider:focus-visible{
+      outline:3px solid rgba(185,138,43,.34);
+      outline-offset:3px;
+    }
+    .post-cook-divider-top{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 18px;
+      background:#9a6a1d;
+      color:#ffffff;
+    }
+    .post-cook-divider-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:76px;
+      padding:5px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.22);
+      color:#ffffff;
+      font-size:10px;
+      line-height:1;
+      letter-spacing:.12em;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .post-cook-divider-title{
+      flex:1;
+      font-size:16px;
+      letter-spacing:.02em;
+      line-height:1.35;
+    }
+    .post-cook-toggle-label{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:76px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:#fffaf0;
+      color:#6f4b12;
+      font-size:12px;
+      line-height:1;
+      font-weight:900;
+      white-space:nowrap;
+      box-shadow:0 2px 8px rgba(95,66,18,0.16);
+    }
+    .post-cook-divider-text{
+      padding:14px 18px 16px;
+      font-size:12px;
+      line-height:1.8;
+      color:#5f4212;
+      font-weight:800;
+    }
+    .post-cook-divider-text strong{
+      color:#6f4b12;
+      font-weight:900;
+    }
+    .post-cook-open-hint{
+      display:block;
+      margin-top:6px;
+      color:#8a611a;
+      font-weight:900;
+    }
+
+    .post-cook-content{
+      margin:-18px 0 26px;
+      padding:18px 16px 4px;
+      border:1.5px solid #d7b56d;
+      border-top:0;
+      border-radius:0 0 18px 18px;
+      background:linear-gradient(180deg, #f7f0d8 0%, #fbf6e8 100%);
+      box-shadow:0 8px 22px rgba(95,66,18,0.08);
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+    .post-cook-content.hidden{
+      display:none;
+    }
+
+    .post-cook-content .section-title{
+      background:var(--gold);
+      color:#ffffff;
+      box-shadow:0 5px 14px rgba(154,106,29,.16);
+    }
+    .post-cook-content .section-title .num{
+      background:rgba(255,255,255,.20);
+      color:#ffffff;
+    }
+
+    .plain-box{
+      border:1.5px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+      padding:14px;
+      min-height:52px;
+      white-space:pre-wrap;
+      font-size:13px;
+      line-height:1.8;
+      font-weight:700;
+      color:#1f2937;
+    }
+    .reference-box{
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      background:#fbfcfe;
+      padding:14px;
+      white-space:pre-wrap;
+      font-size:12px;
+      line-height:1.8;
+      color:#374151;
+      font-weight:700;
+    }
+
+    .goal-wrap{display:flex;flex-direction:column;gap:12px;}
+    .goal-block{break-inside:avoid;page-break-inside:avoid;}
+    .goal-heading{
+      border-left:5px solid var(--brand-navy);
+      padding-left:10px;
+      color:var(--brand-navy);
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+    .goal-line{
+      padding-left:16px;
+      font-size:12px;
+      line-height:1.75;
+      color:#1f2937;
+      font-weight:700;
+    }
+
+    .accordion-card{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      background:#fff;
+      overflow:hidden;
+      margin-bottom:18px;
+      break-inside:avoid;
+    }
+    .accordion-header{
+      width:100%;
+      border:0;
+      background:#f8fafc;
+      color:var(--brand-navy);
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+      font-weight:900;
+      text-align:left;
+    }
+    .accordion-header:hover{background:#f1f5f9;}
+    .accordion-body{
+      border-top:1px solid #e5e7eb;
+      padding:16px;
+    }
+    .accordion-body.hidden{display:none;}
+
+    table.log-table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:12.5px;
+      line-height:1.5;
+      margin-bottom:18px;
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+    table.log-table th,
+    table.log-table td{
+      border:1px solid #cbd5e1;
+      padding:10px;
+      vertical-align:top;
+      word-break:break-word;
+      overflow-wrap:break-word;
+      hyphens:auto;
+      min-height:44px;
+    }
+    table.log-table th{
+      background:#e9edf5;
+      color:var(--brand-navy);
+      font-weight:900;
+      text-align:left;
+    }
+    .serving-row td{
+      background:#ffffff;
+      color:var(--brand-navy);
+      font-weight:900;
+    }
+    .part-row td{
+      background:#e6ebf3;
+      color:#111827;
+      font-weight:900;
+      padding:9px 10px!important;
+    }
+    .additional-row td{
+      background:var(--accent-soft);
+    }
+    .reflection-th{
+      background:var(--reflect)!important;
+      color:var(--reflect-text)!important;
+    }
+    .reflection-cell{
+      background:#f4faff!important;
+    }
+    .reflection-cell .field-help{
+      color:var(--reflect-text);
+    }
+    .reflection-cell .box-input{
+      background:#ffffff;
+      border-color:var(--reflect-line);
+    }
+    .reflection-cell .handwriting-box{
+      background:#ffffff;
+      border-color:var(--reflect-line);
+    }
+    .reflection-card{
+      background:#f4faff;
+      border:1px solid var(--reflect-line);
+      border-radius:12px;
+      padding:10px;
+    }
+    .reflection-card .field-label{
+      color:var(--reflect-text);
+    }
+    .reflection-card .box-input,
+    .reflection-card .handwriting-box{
+      border-color:var(--reflect-line);
+    }
+
+    .undecided-note{
+      background:var(--undecided);
+      border:1px solid var(--undecided-line);
+      border-left:6px solid #d99b22;
+      border-radius:14px;
+      padding:14px 16px;
+      margin-bottom:14px;
+      break-inside:avoid;
+    }
+    .undecided-note-title{
+      font-size:14px;
+      font-weight:900;
+      color:var(--undecided-text);
+      margin-bottom:4px;
+    }
+    .undecided-note-body{
+      font-size:12px;
+      font-weight:700;
+      line-height:1.8;
+      color:var(--undecided-text);
+    }
+    .undecided-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .undecided-card{
+      background:#fffdf5;
+      border:1px solid var(--undecided-line);
+      border-radius:12px;
+      padding:12px;
+      break-inside:avoid;
+    }
+    .undecided-card .field-label{
+      color:var(--undecided-text);
+    }
+    .undecided-card .box-input,
+    .undecided-card .handwriting-box{
+      border-color:var(--undecided-line);
+    }
+
+    .method-step{
+      border-left:5px solid var(--brand-navy);
+      padding-left:16px;
+      margin-bottom:24px;
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+    .method-title{
+      font-size:16px;
+      font-weight:900;
+      color:var(--brand-navy);
+      margin:0 0 10px;
+    }
+    .method-lines{
+      margin-bottom:12px;
+    }
+    .method-line{
+      font-size:13px;
+      line-height:1.75;
+      font-weight:700;
+      color:#374151;
+      margin-bottom:3px;
+    }
+    .method-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .method-mini{
+      background:#f9fafb;
+      border:1px solid #edf0f4;
+      border-radius:8px;
+      padding:10px;
+      min-height:50px;
+    }
+    .mini-label{
+      display:block;
+      font-size:10px;
+      line-height:1.4;
+      color:#6b7280;
+      font-weight:900;
+      margin-bottom:4px;
+    }
+    .mini-text{
+      white-space:pre-wrap;
+      font-size:11px;
+      line-height:1.65;
+      color:#374151;
+      font-weight:700;
+    }
+    .note-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .field-label{
+      display:block;
+      font-size:12.5px;
+      line-height:1.45;
+      font-weight:900;
+      color:var(--brand-navy);
+      margin-bottom:5px;
+    }
+    .field-help{
+      display:block;
+      font-size:11px;
+      line-height:1.55;
+      font-weight:800;
+      color:#667085;
+      margin-bottom:7px;
+    }
+    .box-input{
+      width:100%;
+      border:2px solid var(--line);
+      border-radius:11px;
+      padding:11px 12px;
+      font-size:13px;
+      line-height:1.65;
+      color:#111827;
+      background:#fff;
+      display:block;
+      resize:vertical;
+      min-height:70px;
+      font-family:inherit;
+      box-shadow:inset 0 1px 0 rgba(15,23,42,.03);
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .box-input::placeholder{
+      color:#98a2b3;
+      font-weight:800;
+    }
+    .box-input:focus{
+      outline:none;
+      border-color:#68b7ff;
+      box-shadow:0 0 0 4px rgba(104,183,255,.16);
+    }
+    .handwriting-box{
+      min-height:72px;
+      border:2px solid var(--line);
+      border-radius:11px;
+      background:#fff;
+      box-shadow:inset 0 1px 0 rgba(15,23,42,.03);
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    .choice-row{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .choice{
+      border:1.5px solid #d8dee8;
+      border-radius:10px;
+      background:#fff;
+      padding:10px 8px;
+      font-size:11px;
+      line-height:1.4;
+      font-weight:900;
+      color:#374151;
+      text-align:center;
+      min-height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .online-choice input{
+      margin-right:6px;
+      accent-color:var(--brand-navy);
+    }
+
+    .policy-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .policy-card{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      background:#fffdfa;
+      padding:12px;
+      break-inside:avoid;
+    }
+    .policy-title{
+      font-size:15px;
+      color:var(--brand-navy);
+      font-weight:900;
+      margin-bottom:10px;
+      padding-bottom:8px;
+      border-bottom:1px solid #edf0f4;
+    }
+    .policy-fields{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .fix-matrix-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .fix-axis-block{
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+      break-inside:avoid;
+    }
+    .fix-axis-title{
+      background:#f8fafc;
+      color:var(--brand-navy);
+      font-size:16px;
+      font-weight:900;
+      padding:12px 14px;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    @media (min-width: 768px) {
+      .fix-matrix{
+        display:grid;
+        grid-template-columns:repeat(4, 1fr);
+        border-top:0;
+      }
+      .fix-matrix-head{
+        background:#f3f4f6;
+        color:#111827;
+        font-size:13px;
+        font-weight:900;
+        padding:12px;
+        border-right:1px solid #d1d5db;
+        border-bottom:1px solid #d1d5db;
+      }
+      .fix-matrix-head:last-child{border-right:none;}
+      .fix-matrix-cell{
+        padding:10px;
+        border-right:1px solid #e5e7eb;
+        min-height:106px;
+      }
+      .fix-matrix-cell:last-child{border-right:none;}
+    }
+
+    @media (max-width: 767px) {
+      .fix-matrix {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    @media screen and (max-width:768px){
+      #setup-screen {
+        padding: 16px 12px !important;
+      }
+      #setup-screen .max-w-2xl {
+        padding: 20px 16px !important;
+      }
+      #setup-screen .space-y-6 > div {
+        margin-bottom: 20px !important;
+      }
+
+      /* ボタンのタッチターゲット統一 */
+      button {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+      }
+
+      /* スティッキーメニューの改善 */
+      #sticky-menu {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+      }
+      #sticky-menu .max-w-[210mm] {
+        padding: 8px 12px !important;
+      }
+      #sticky-menu .flex {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #sticky-menu .flex > div:first-child {
+        font-size: 10px !important;
+      }
+      #sticky-menu .text-\[12px\] {
+        font-size: 11px !important;
+      }
+
+      /* モーダルダイアログの改善 */
+      .modal-content {
+        padding: 24px 20px !important;
+        max-height: 90vh !important;
+      }
+
+      /* フォーム要素間の余白 */
+      .space-y-6 > * {
+        margin-bottom: 20px !important;
+      }
+      .space-y-4 > * {
+        margin-bottom: 16px !important;
+      }
+
+      /* ドラッグ&ドロップゾーン */
+      #drop-zone {
+        padding: 24px 16px !important;
+        min-height: 140px !important;
+      }
+
+      /* ラジオボタン、チェックボックスのクリック領域拡大 */
+      label.flex.flex-col {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+      }
+      label.flex.flex-col input[type="radio"] {
+        min-height: 24px !important;
+        margin-bottom: 8px !important;
+      }
+
+      .a4-page{
+        width:calc(100vw - 24px)!important;
+        min-height:auto!important;
+        padding:16px!important;
+        margin:12px auto!important;
+        border-radius:14px;
+      }
+      .sheet-header{
+        flex-direction:column;
+        gap:14px;
+      }
+      .sheet-title,.sheet-meta{text-align:left;}
+      .sheet-logo{font-size:38px;}
+      .method-grid,.note-grid,.policy-grid,.policy-fields,.action-grid{grid-template-columns:1fr;}
+      .fix-matrix{grid-template-columns:1fr;}
+      .fix-matrix-head{border-right:none;}
+      .fix-matrix-cell{border-right:none;border-bottom:1px solid #e5e7eb;}
+      .choice-row{grid-template-columns:1fr;}
+      table.log-table{font-size:11px;}
+      table.log-table th, table.log-table td{padding:8px;}
+
+      .box-input {
+        font-size: 16px !important;
+        padding: 14px 12px !important;
+        min-height: 100px !important;
+        line-height: 1.8;
+        margin-bottom: 8px !important;
+      }
+      .handwriting-box {
+        min-height: 110px !important;
+        font-size: 14px;
+      }
+      input[type="text"],
+      input[type="date"] {
+        font-size: 16px !important;
+        padding: 14px 12px !important;
+        min-height: 44px !important;
+        margin-bottom: 8px !important;
+      }
+      input[type="radio"],
+      input[type="checkbox"] {
+        width: 20px !important;
+        height: 20px !important;
+        cursor: pointer !important;
+        min-height: 44px !important;
+      }
+
+      /* ラジオボタン・チェックボックスのラベル */
+      label input[type="radio"],
+      label input[type="checkbox"] {
+        margin-right: 12px !important;
+      }
+      label.choice {
+        min-height: 48px !important;
+        padding: 12px 8px !important;
+      }
+
+      /* フィールドラベルと説明文の間隔 */
+      .field-label {
+        margin-bottom: 8px !important;
+      }
+      .field-help {
+        margin-bottom: 10px !important;
+      }
+
+      /* アコーディオンヘッダー */
+      .accordion-header {
+        min-height: 44px !important;
+        padding: 12px 14px !important;
+      }
+
+      /* ポストクック切り替えボタン */
+      .post-cook-divider {
+        min-height: 50px !important;
+      }
+
+      textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+    }
+
+    /* ===== メニュー全体の設定 ===== */
+    #save-menu-container {
+      pointer-events: auto !important;
+      position: relative !important;
+      z-index: 60 !important;
+    }
+
+    /* ===== メニューボタンの設定 ===== */
+    .save-menu-trigger {
+      cursor: pointer !important;
+      position: relative !important;
+      z-index: 100 !important;
+    }
+
+    /* ===== ドロップダウンメニューの設定 ===== */
+    #save-dropdown {
+      position: absolute !important;
+      z-index: 2147483647 !important;
+    }
+
+    /* ===== hidden クラスによる非表示 ===== */
+    #save-dropdown.hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    /* ===== JavaScript で明示的に指定した display:flex を優先 ===== */
+    #save-dropdown:not(.hidden) {
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    /* ===== ドロップダウン内のボタン ===== */
+    .dropdown-menu-btn {
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      width: 100% !important;
+      text-align: left !important;
+      background: none !important;
+      border: none !important;
+      padding: 12px 16px !important;
+      font-weight: bold !important;
+      font-size: 14px !important;
+      transition: background-color 0.15s ease !important;
+    }
+
+    .dropdown-menu-btn:hover {
+      background-color: #f9fafb !important;
+    }
+
+    .dropdown-menu-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* PDFエクスポート用の一時的なスタイル */
+    body.exporting-pdf .no-print,
+    body.exporting-pdf .toast-notify,
+    body.exporting-pdf .modal-overlay,
+    body.exporting-pdf #sticky-menu { display: none !important; }
+
+    /* PDF出力時はtextareaを完全展開・クリップなし */
+    body.exporting-pdf textarea.box-input {
+      overflow: visible !important;
+      resize: none !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+    }
+    body.exporting-pdf table.log-table td,
+    body.exporting-pdf table.log-table th {
+      overflow: visible !important;
+    }
+
+    body.exporting-pdf .accordion-icon,
+    body.exporting-pdf .post-cook-open-hint,
+    body.exporting-pdf .post-cook-toggle-label {
+      display: none !important;
+    }
+    body.exporting-pdf .accordion-header {
+      background: transparent !important;
+      padding: 0 0 10px 0 !important;
+      border-bottom: 1px solid var(--line) !important;
+    }
+
+    body.exporting-pdf .post-cook-divider {
+      border-radius: 14px !important;
+      margin-bottom: 24px !important;
+      border: 1.5px solid #d7b56d !important;
+    }
+    body.exporting-pdf .post-cook-content {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    body.exporting-pdf .post-cook-content .section {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin-bottom: 24px !important;
+    }
+
+    @media print{
+      @page{size:A4;margin:12mm;}
+      body{background:#fff;}
+      .no-print,.toast-notify,.modal-overlay,#sticky-menu{display:none!important;}
+      .a4-page{
+        width:auto;
+        min-height:auto;
+        margin:0;
+        padding:0;
+        box-shadow:none;
+      }
+      .accordion-body.hidden{display:block!important;}
+      .post-cook-content.hidden{display:block!important;}
+      .post-cook-toggle-label{display:none!important;}
+      .accordion-header{display:none!important;}
+      .accordion-card{
+        border:0;
+        border-radius:0;
+        margin-bottom:18px;
+      }
+      .accordion-body{
+        border:0;
+        padding:0;
+      }
+      .section-title,
+      .post-cook-divider,
+      .post-cook-divider-top,
+      .post-cook-content{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .part-row td,.serving-row td,table.log-table th,.additional-row td{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      textarea.box-input{height:auto!important;}
+    }
+  </style>
+</head>
+
+<body>
+  <div id="toast" class="toast-notify"></div>
+
+  <div id="draft-list-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 class="text-xl font-black text-[#182349] mb-6">保存データ一覧</h3>
+      <div id="draft-list-container" class="space-y-4 mb-6"></div>
+      <button id="close-draft-list-btn" type="button" class="w-full bg-gray-100 text-[#182349] py-4 rounded-xl font-black hover:bg-gray-200 transition">閉じる</button>
+    </div>
+  </div>
+
+  <div id="save-modal" class="modal-overlay">
+    <div class="modal-content !w-full !max-w-sm !p-6 md:!p-8">
+      <h3 class="text-lg md:text-xl font-black text-[#182349] mb-2 text-center" id="save-modal-title">保存名を入力</h3>
+      <p class="text-xs text-gray-500 text-center mb-6">識別しやすい保存名を入力してください。</p>
+      <input type="text" id="draft-name-input" class="w-full py-3 px-4 border-2 border-gray-100 rounded-xl font-bold text-sm text-[#182349] focus:border-[#c95742] outline-none transition-all mb-6 text-center shadow-inner" placeholder="保存名を入力">
+      <div class="flex gap-3">
+        <button id="cancel-save-modal-btn" type="button" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-[#182349] rounded-xl font-bold text-sm transition-all">キャンセル</button>
+        <button id="modal-confirm-save-btn" type="button" class="flex-1 py-3 bg-[#c95742] text-white hover:brightness-110 rounded-xl font-black text-sm transition-all shadow-md">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="setup-screen" class="container mx-auto px-4 py-12 no-print">
+    <div class="max-w-2xl mx-auto bg-white p-10 rounded-3xl shadow-2xl">
+      <header class="text-center mb-10">
+        <h1 class="text-5xl font-black tracking-tighter mb-5 text-[#182349]">EDICODE</h1>
+        <p class="inline-flex items-center justify-center px-6 py-3 rounded-2xl bg-[#182349] text-white text-base font-black tracking-[0.08em] shadow-md">調理・実食ログシート作成フォーム</p>
+        <p class="mt-5 text-sm leading-relaxed font-black text-gray-600 max-w-xl mx-auto">調理中の検証・分析・調整記録と、実食後の次回設計方針を整理するフォーム</p>
+      </header>
+
+      <div id="restore-panel-root" class="hidden mb-8">
+        <button id="open-drafts-btn" class="w-full flex items-center justify-between p-6 rounded-2xl bg-[#182349] text-white hover:opacity-90 transition shadow-lg" type="button">
+          <span class="font-black text-lg pointer-events-none">保存データから編集を再開する</span>
+          <span class="text-xl pointer-events-none">📋</span>
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">記入者名</label>
+            <input type="text" id="manual-username" placeholder="名前を入力" class="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-[#182349] outline-none bg-gray-50 transition" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          </div>
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">入力日</label>
+            <input type="date" id="manual-date" class="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-[#182349] outline-none bg-gray-50 transition text-sm" autocomplete="off">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">使用モードを選択</label>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer hover:bg-gray-50 transition">
+              <input type="radio" name="usage-mode" value="handwriting" checked class="mb-2 w-5 h-5 accent-[#182349]">
+              <span class="text-sm font-bold">手書きで使用</span>
+            </label>
+            <label class="flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer hover:bg-gray-50 transition">
+              <input type="radio" name="usage-mode" value="online" class="mb-2 w-5 h-5 accent-[#182349]">
+              <span class="text-sm font-bold">オンライン入力</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">検証用レシピTXTをアップロード</label>
+          <div id="drop-zone" class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-[#182349] transition bg-gray-50">
+            <input type="file" id="input-file" accept=".txt" class="hidden">
+            <label for="input-file" class="cursor-pointer block w-full">
+              <div class="text-sm font-bold text-gray-600 mb-2">ファイルをここにドラッグまたはクリック</div>
+              <div class="text-[11px] text-gray-400 font-bold">.txt のみ対応</div>
+              <div id="file-display" class="mt-4 text-sm font-black text-[#182349] hidden"></div>
+            </label>
+          </div>
+        </div>
+
+        <button id="createBtn" class="w-full bg-[#182349] text-white py-5 rounded-2xl font-black text-lg hover:bg-[#25325d] transition shadow-xl" type="button">
+          調理・実食ログシートを作成する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="output-screen" class="hidden pb-24">
+    <!-- スティッキーメニューを output-screen 内の最上部に移動し、sticky top-0 で追従させる -->
+    <div id="sticky-menu" class="hidden sticky top-0 z-[9999] pointer-events-none pb-2 md:pb-3 no-print" style="background-color: #eef1f6;">
+      <div class="max-w-[210mm] mx-auto px-2 md:px-4 pt-3 md:pt-4">
+        <div class="bg-white/95 backdrop-blur-md border border-gray-200 px-4 py-3 shadow-lg flex justify-between items-center rounded-2xl relative pointer-events-auto">
+          <div class="flex flex-col flex-1 min-w-0 pr-4 pointer-events-none">
+            <span class="text-[10px] font-bold text-gray-400">現在の保存ステータス</span>
+            <span class="text-[12px] font-black text-[#182349] truncate draft-name-text">保存名: 未保存</span>
+            <span class="text-[10px] text-gray-500 save-status-text">最終保存: 未保存</span>
+          </div>
+
+          <div id="save-menu-container" class="relative flex-shrink-0" data-save-menu-ref="true">
+            <button
+              id="save-menu-main-btn"
+              type="button"
+              role="button"
+              tabIndex="0"
+              class="save-menu-trigger flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-[#182349] rounded-xl text-xs font-bold transition-all"
+            >
+              <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span class="pointer-events-none">メニュー</span>
+              <svg class="w-3 h-3 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+            <!-- ドロップダウンメニューを下に開くように戻す -->
+            <div
+              id="save-dropdown"
+              class="hidden absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden flex-col"
+              data-save-dropdown="true"
+            >
+              <button
+                id="save-overwrite-btn"
+                type="button"
+                role="button"
+                tabIndex="0"
+                class="dropdown-menu-btn border-b border-gray-100 flex items-center gap-2 text-[#182349]"
+                data-save-menu-item="true"
+              >
+                <svg class="w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span class="pointer-events-none">上書き保存</span>
+              </button>
+              <button
+                id="save-new-btn"
+                type="button"
+                role="button"
+                tabIndex="0"
+                class="dropdown-menu-btn border-b border-gray-100 flex items-center gap-2 text-[#182349]"
+                data-save-menu-item="true"
+              >
+                <svg class="w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span class="pointer-events-none">別名で保存</span>
+              </button>
+              <button
+                id="save-rename-btn"
+                type="button"
+                role="button"
+                tabIndex="0"
+                class="dropdown-menu-btn hidden border-b border-gray-100 flex items-center gap-2 text-[#182349]"
+                data-save-menu-item="true"
+              >
+                <svg class="w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span class="pointer-events-none">名前変更</span>
+              </button>
+              <button
+                id="save-list-btn"
+                type="button"
+                role="button"
+                tabIndex="0"
+                class="dropdown-menu-btn flex items-center gap-2 text-[#c95742]"
+                data-save-menu-item="true"
+              >
+                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                <span class="pointer-events-none">保存データ一覧</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-4 no-print flex flex-col gap-4 max-w-[210mm]">
+      <div class="flex justify-between items-center">
+        <button id="backBtn" class="text-sm font-black flex items-center gap-2 text-gray-400 hover:text-[#182349] transition" type="button">
+          <span>←</span> BACK
+        </button>
+        <div class="flex flex-wrap items-center justify-end gap-3">
+          <button id="printBtn" class="bg-[#182349] text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-[#25325d] transition" type="button">
+            PDF保存 / 印刷
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="sheet-content" class="a4-page"></div>
+  </div>
+
+<script>
+  const DRAFTS_KEY = 'edicode_cooking_tasting_log_sheet_drafts_v5';
+  let currentMode = 'handwriting';
+  let currentData = null;
+  let currentRawText = '';
+  let currentUser = '';
+  let currentDate = '';
+  let uploadedFileName = '';
+  let saveTimer = null;
+
+  let currentDraftId = null;
+  let currentDraftName = '';
+  let saveModalMode = 'new';
+
+  let storageAvailable = true;
+  let memoryBackup = {};
+
+  const $ = (id) => document.getElementById(id);
+
+  function checkStorageAvailable() {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (e) {
+      console.warn('localStorageが利用できません（プライベートブラウジング等）。メモリ内に保存します。', e);
+      return false;
+    }
+  }
+
+  function getAllDrafts(){
+    try{
+      if (!storageAvailable) return memoryBackup;
+
+      const raw = localStorage.getItem(DRAFTS_KEY);
+      if(!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    }catch(e){
+      console.error('getAllDrafts エラー:', e);
+      return {};
+    }
+  }
+
+  function saveDrafts(drafts) {
+    try {
+      if (!storageAvailable) {
+        memoryBackup = drafts;
+        return true;
+      }
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+      return true;
+    } catch (e) {
+      console.error('saveDrafts エラー:', e);
+      if (e.name === 'QuotaExceededError') {
+        showToast('保存容量が超過しています。古いデータを削除してください。');
+      }
+      return false;
+    }
+  }
+
+  // ===== メニューイベント初期化 (インラインイベント完全排除) =====
+  function initSaveMenu() {
+    const menuBtn = document.getElementById('save-menu-main-btn');
+    const dropdown = document.getElementById('save-dropdown');
+
+    if (!menuBtn || !dropdown) return;
+
+    // メニュー開閉ボタン
+    menuBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const arrowIcon = menuBtn.querySelector('svg:last-child');
+
+      if (dropdown.classList.contains('hidden')) {
+        dropdown.classList.remove('hidden');
+        dropdown.style.display = 'flex';
+        if(arrowIcon) arrowIcon.style.transform = 'rotate(180deg)';
+      } else {
+        dropdown.classList.add('hidden');
+        dropdown.style.display = 'none';
+        if(arrowIcon) arrowIcon.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    // ドロップダウン内のクリックが外に漏れないようにする
+    dropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+
+    // 画面のどこかをクリックしたらメニューを閉じる
+    document.addEventListener('click', function() {
+      if (!dropdown.classList.contains('hidden')) {
+        dropdown.classList.add('hidden');
+        dropdown.style.display = 'none';
+        const arrowIcon = menuBtn.querySelector('svg:last-child');
+        if(arrowIcon) arrowIcon.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    // 各種アクションボタンへの処理割り当て
+    const actions = {
+      'save-overwrite-btn': () => {
+        if (currentDraftId) executeSave(currentDraftId, currentDraftName);
+        else window.openSaveModal('new');
+      },
+      'save-new-btn': () => window.openSaveModal('new'),
+      'save-rename-btn': () => window.openSaveModal('rename'),
+      'save-list-btn': () => {
+        renderDraftList();
+        openModal('draft-list-modal');
+      }
+    };
+
+    Object.keys(actions).forEach(id => {
+      const btn = document.getElementById(id);
+      if(btn) {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          dropdown.classList.add('hidden');
+          dropdown.style.display = 'none';
+          setTimeout(() => { actions[id](); }, 10);
+        });
+      }
+    });
+
+    // 初期画面の保存データ復元ボタン
+    const openDraftsBtn = document.getElementById('open-drafts-btn');
+    if(openDraftsBtn) {
+      openDraftsBtn.addEventListener('click', () => {
+        renderDraftList();
+        openModal('draft-list-modal');
+      });
+    }
+
+    // 動的リストのイベントデリゲーション
+    const draftListContainer = document.getElementById('draft-list-container');
+    if (draftListContainer) {
+      draftListContainer.addEventListener('click', function(e) {
+        const restoreBtn = e.target.closest('.restore-draft-btn');
+        const deleteBtn = e.target.closest('.delete-draft-btn');
+
+        if (restoreBtn) {
+          window.restoreDraft(restoreBtn.dataset.id);
+        } else if (deleteBtn) {
+          window.deleteDraft(deleteBtn.dataset.id);
+        }
+      });
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function showToast(message){
+    const toast = $('toast');
+    if(!toast) return;
+    toast.textContent = message;
+    toast.style.display = 'block';
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.style.display = 'none', 2600);
+  }
+
+  function openModal(id){ const el = $(id); if(el) el.style.display = 'flex'; }
+  function closeModal(id){ const el = $(id); if(el) el.style.display = 'none'; }
+
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function normalizeParsedData(data){
+    const safe = data && typeof data === 'object' ? data : {};
+    return {
+      mods: safe.mods || '',
+      info: safe.info || '',
+      dish: safe.dish || '名称未設定',
+      goal: safe.goal || '',
+      conditions: safe.conditions || '',
+      ingr: Array.isArray(safe.ingr) ? safe.ingr : [],
+      meth: Array.isArray(safe.meth) ? safe.meth : [],
+      prec: safe.prec || ''
+    };
+  }
+
+  function updateInitialScreenDraftButton(){
+    const root = $('restore-panel-root');
+    if(!root) return;
+    const drafts = Object.values(getAllDrafts()).filter(d => d.id !== 'live');
+    root.classList.toggle('hidden', drafts.length === 0);
+  }
+
+  function collectInputValues(){
+    const values = {};
+    document.querySelectorAll('[data-save-key]').forEach(el => {
+      if(el.type === 'radio'){
+        if(el.checked) values[el.name] = el.value;
+      }else{
+        values[el.getAttribute('data-save-key')] = el.value || '';
+      }
+    });
+    return values;
+  }
+
+  function restoreInputValues(values){
+    Object.entries(values || {}).forEach(([key, val]) => {
+      const radio = document.querySelector(`input[type="radio"][name="${CSS.escape(key)}"][value="${CSS.escape(val)}"]`);
+      if(radio){ radio.checked = true; return; }
+
+      const el = document.querySelector(`[data-save-key="${CSS.escape(key)}"]`);
+      if(el){
+        el.value = val || '';
+        autoResizeTextarea(el);
+      }
+    });
+  }
+
+  function createDraftId(){
+    return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function createDefaultDraftName(){
+    const datePart = String(currentDate || new Date().toISOString().split('T')[0]).replace(/-/g,'');
+    const dish = String(currentData?.dish || '料理名未設定').replace(/[\\/:*?"<>|\n\r\t]/g,'').replace(/\s+/g,'');
+    const user = String(currentUser || '記入者未設定').replace(/[\\/:*?"<>|\n\r\t]/g,'').replace(/\s+/g,'');
+    return `${datePart}_${dish}_${user}`;
+  }
+
+  function executeSave(id, name) {
+    if(!currentData) return showToast('シート作成後に保存できます');
+
+    const drafts = getAllDrafts();
+    drafts[id] = {
+      id,
+      name: name,
+      date: currentDate,
+      user: currentUser,
+      mode: currentMode,
+      rawText: currentRawText,
+      fileName: uploadedFileName,
+      parsedData: normalizeParsedData(currentData),
+      inputValues: collectInputValues(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const saved = saveDrafts(drafts);
+    if (!saved) return;
+
+    currentDraftId = id;
+    currentDraftName = name;
+
+    updateInitialScreenDraftButton();
+    updateSaveStatus(drafts[id].updatedAt);
+    showToast('保存しました');
+  }
+
+  function updateSaveStatus(updatedAt){
+    const dateText = updatedAt ? '最終保存: ' + new Date(updatedAt).toLocaleString() : '未保存';
+    const nameText = currentDraftName ? '保存名: ' + currentDraftName : '未保存 (自動保存中)';
+
+    document.querySelectorAll('.save-status-text').forEach(el => el.textContent = dateText);
+    document.querySelectorAll('.draft-name-text').forEach(el => el.textContent = nameText);
+
+    const renameBtn = $('save-rename-btn');
+    if(renameBtn){
+      if(currentDraftId) renameBtn.classList.remove('hidden');
+      else renameBtn.classList.add('hidden');
+    }
+  }
+
+  function renderDraftList(){
+    const box = $('draft-list-container');
+    const drafts = Object.values(getAllDrafts()).filter(d => d.id !== 'live').sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+    const liveDraft = getAllDrafts()['live'];
+
+    let html = '';
+
+    if (liveDraft) {
+      html += `
+        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-4 relative">
+          <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">自動一時保存</div>
+          <h4 class="font-bold text-sm text-[#182349] pr-16 mb-1">前回の編集中データ (オートセーブ)</h4>
+          <p class="text-xs text-gray-500 mb-3">最終更新: ${new Date(liveDraft.updatedAt).toLocaleString()}</p>
+          <div class="flex gap-2 justify-end">
+            <button data-id="live" class="restore-draft-btn bg-[#182349] text-white px-4 py-2 rounded-lg text-xs font-black hover:opacity-90 shadow-sm">このデータから再開</button>
+            <button data-id="live" class="delete-draft-btn bg-red-50 text-red-500 px-3 py-2 rounded-lg text-xs font-black hover:bg-red-100">削除</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if(!drafts.length && !liveDraft){
+      box.innerHTML = '<p class="text-center text-gray-400 py-8 font-bold text-sm">保存されたデータはありません</p>';
+      return;
+    }
+
+    html += drafts.map(d => `
+      <div class="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-orange-200 transition-colors shadow-sm">
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-sm text-[#182349] truncate break-all">${escapeHtml(d.name || '名称未設定')}</div>
+          <div class="text-[11px] text-gray-500 mt-1 flex flex-wrap gap-x-3">
+            <span>記入者: ${escapeHtml(d.user || '未設定')}</span>
+            <span>保存日時: ${new Date(d.updatedAt).toLocaleString()}</span>
+          </div>
+          <div class="text-[10px] text-[#c95742] mt-1 font-bold">${escapeHtml(d.parsedData?.dish || '料理名不明')} / ${d.mode === 'online' ? 'オンライン入力' : '手書き印刷'}</div>
+        </div>
+        <div class="flex gap-2 justify-end w-full md:w-auto mt-2 md:mt-0">
+          <button data-id="${d.id}" class="restore-draft-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-sm">復元</button>
+          <button data-id="${d.id}" class="delete-draft-btn bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-100">削除</button>
+        </div>
+      </div>
+    `).join('');
+
+    box.innerHTML = html;
+  }
+
+  window.restoreDraft = function(id){
+    const drafts = getAllDrafts();
+    const d = drafts[id];
+    if(!d) return showToast('保存データが見つかりません');
+
+    currentMode = d.mode || 'handwriting';
+    currentData = normalizeParsedData(d.parsedData);
+    currentRawText = d.rawText || '';
+    currentUser = d.user || '未設定';
+    currentDate = d.date || new Date().toISOString().split('T')[0];
+    uploadedFileName = d.fileName || '';
+
+    currentDraftId = id === 'live' ? null : id;
+    currentDraftName = id === 'live' ? '' : (d.name || '');
+
+    renderSheet(currentData, currentUser, currentDate);
+    $('setup-screen').classList.add('hidden');
+    $('output-screen').classList.remove('hidden');
+    $('sticky-menu').classList.remove('hidden');
+    closeModal('draft-list-modal');
+
+    requestAnimationFrame(() => {
+      restoreInputValues(d.inputValues || {});
+      updateSaveStatus(id === 'live' ? null : d.updatedAt);
+      attachLiveInputEvents();
+      window.scrollTo(0,0);
+    });
+  };
+
+  window.deleteDraft = function(id){
+    const drafts = getAllDrafts();
+    delete drafts[id];
+    saveDrafts(drafts);
+    if(currentDraftId === id) {
+        currentDraftId = null;
+        currentDraftName = '';
+        updateSaveStatus(null);
+    }
+    renderDraftList();
+    updateInitialScreenDraftButton();
+    showToast('削除しました');
+  };
+
+  window.openSaveModal = function(mode) {
+    saveModalMode = mode;
+    const title = document.getElementById('save-modal-title');
+    const input = document.getElementById('draft-name-input');
+    if (mode === 'new') {
+      title.textContent = '保存名を入力';
+      input.value = createDefaultDraftName();
+    } else {
+      title.textContent = '保存名を変更する';
+      input.value = currentDraftName || '';
+    }
+    openModal('save-modal');
+  };
+
+  window.confirmSave = function() {
+    const input = document.getElementById('draft-name-input');
+    const newName = input.value.trim();
+    if (!newName) return;
+
+    if (saveModalMode === 'new') {
+      const newId = createDraftId();
+      executeSave(newId, newName);
+    } else if (saveModalMode === 'rename') {
+      if (currentDraftId) {
+        executeSave(currentDraftId, newName);
+      }
+    }
+    closeModal('save-modal');
+  };
+
+  function parseRecipeTxt(text){
+    const data = { mods:'', info:'', dish:'', goal:'', conditions:'', ingr:[], meth:[], prec:'' };
+    const lines = String(text || '').split(/\r?\n/);
+    let current = '';
+    let currentMethod = null;
+    let currentField = '';
+
+    const SECTION_MAP = {
+      mods: ['素案レシピからの主な修正点','主な修正点','検証用レシピ作成の方針','検証テーマ'],
+      info: ['レシピ情報','検証用レシピ情報'],
+      dish: ['料理名'],
+      goal: ['料理のゴール設計要約','料理のゴール設計','ゴール設計'],
+      conditions: ['レシピ作成の条件','条件','制約'],
+      ingr: ['材料','検証用レシピの材料'],
+      meth: ['調理方法','検証用レシピの調理方法'],
+      prec: ['注意事項']
+    };
+
+    function switchSection(trimmed){
+      const wrap = trimmed.match(/^={2,}\s*(.+?)\s*={2,}$/);
+      const name = wrap ? wrap[1].trim() : trimmed;
+      const hasPrefix = /^[■・\-*#\d+[\.\)】]|^【\d+】/.test(trimmed);
+      if(!wrap && hasPrefix) return null;
+      for(const [key, headers] of Object.entries(SECTION_MAP)){
+        if(headers.includes(name)) return key;
+      }
+      return null;
+    }
+
+    lines.forEach(rawLine => {
+      const trimmed = rawLine.trim();
+      if(!trimmed) return;
+
+      const next = switchSection(trimmed);
+      if(next){
+        current = next;
+        currentField = '';
+        return;
+      }
+
+      if(current === 'mods'){
+        data.mods += trimmed + '\n';
+        return;
+      }
+      if(current === 'info'){
+        data.info += trimmed + '\n';
+        return;
+      }
+      if(current === 'dish'){
+        if(!data.dish && !/^[-・]/.test(trimmed)) data.dish = trimmed.replace(/^[-・]\s*/,'');
+        return;
+      }
+      if(current === 'goal'){
+        data.goal += trimmed + '\n';
+        return;
+      }
+      if(current === 'conditions'){
+        data.conditions += trimmed + '\n';
+        return;
+      }
+      if(current === 'ingr'){
+        data.ingr.push(trimmed);
+        return;
+      }
+      if(current === 'meth'){
+        const head = trimmed.match(/^【(\d+)】\s*(.+)$/);
+        if(head){
+          currentMethod = { id: head[1], title: head[2], steps: [], hypothesis: '', tasting: '' };
+          data.meth.push(currentMethod);
+          currentField = '';
+          return;
+        }
+        if(!currentMethod) return;
+
+        if(/^(\d+)\.\s*/.test(trimmed)){
+          currentMethod.steps.push(trimmed);
+          return;
+        }
+
+        if(/調理前の仮説|仮説・懸念|懸念/.test(trimmed)){
+          currentField = 'hypothesis';
+          return;
+        }
+        if(/検証ポイント|味見・検証|味見/.test(trimmed)){
+          currentField = 'tasting';
+          return;
+        }
+
+        if(currentField === 'hypothesis'){
+          currentMethod.hypothesis += trimmed + '\n';
+        }else if(currentField === 'tasting'){
+          currentMethod.tasting += trimmed + '\n';
+        }else if(currentMethod.steps.length){
+          currentMethod.steps[currentMethod.steps.length - 1] += ' ' + trimmed;
+        }
+        return;
+      }
+      if(current === 'prec'){
+        data.prec += trimmed + '\n';
+      }
+    });
+
+    if(!data.dish){
+      const dishFromInfo = data.info.match(/料理名[:：]\s*(.+)/);
+      data.dish = dishFromInfo ? dishFromInfo[1].trim() : '名称未設定';
+    }
+
+    return normalizeParsedData(data);
+  }
+
+  function formatGoalSummary(text){
+    const targetHeaders = [
+      'この料理を一文で言うと',
+      '想定シチュエーションと食べ手の期待',
+      '料理の偏差値・価格イメージ・料理の付加価値',
+      'ビジュアル・盛り付け',
+      'らしさ',
+      'コク',
+      'コントラスト'
+    ];
+
+    const blocks = [];
+    let current = null;
+    let skipping = false;
+
+    String(text || '').split(/\r?\n/).forEach(line => {
+      const trimmed = line.trim();
+      if(!trimmed) return;
+
+      if(trimmed.startsWith('■')){
+        const header = trimmed.replace(/^■\s*/, '').trim();
+        if(targetHeaders.includes(header)){
+          current = {title:header, lines:[]};
+          blocks.push(current);
+          skipping = false;
+        }else{
+          current = null;
+          skipping = true;
+        }
+        return;
+      }
+
+      if(!current || skipping) return;
+      const clean = trimmed.replace(/^[-・■*]\s*/, '').trim();
+      if(clean) current.lines.push(clean);
+    });
+
+    if(!blocks.length){
+      const raw = String(text || '').trim();
+      return raw ? `<div class="reference-box">${escapeHtml(raw)}</div>` : '<div class="reference-box text-gray-400">ゴール設計情報がありません</div>';
+    }
+
+    return `<div class="goal-wrap">
+      ${blocks.map(b => `
+        <div class="goal-block">
+          <div class="goal-heading">${escapeHtml(b.title)}</div>
+          <div>
+            ${b.lines.map(l => `<div class="goal-line">・${escapeHtml(l)}</div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  function renderInput(minHeight, key, placeholder = ''){
+    if(currentMode === 'online'){
+      return `<textarea class="box-input" data-save-key="${escapeHtml(key)}" style="min-height:${minHeight}px" data-min-height="${minHeight}" placeholder="${escapeHtml(placeholder)}" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>`;
+    }
+    return `<div class="handwriting-box" style="min-height:${minHeight}px"></div>`;
+  }
+
+  function renderChoices(name, options){
+    if(currentMode === 'online'){
+      return `<div class="choice-row">
+        ${options.map(opt => `
+          <label class="choice online-choice">
+            <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(opt)}">
+            <span>${escapeHtml(opt)}</span>
+          </label>
+        `).join('')}
+      </div>`;
+    }
+    return `<div class="choice-row">
+      ${options.map(opt => `<div class="choice">□ ${escapeHtml(opt)}</div>`).join('')}
+    </div>`;
+  }
+
+  function isServingsLine(text){
+    return /^【?\s*\d+\s*(人前|人分|名分)\s*】?$/.test(text) || /^【.*(人前|人分|名分).*】$/.test(text);
+  }
+
+  function renderIngredientTable(ingr){
+    if(!ingr || !ingr.length){
+      return '<div class="reference-box text-gray-400">材料情報がありません</div>';
+    }
+
+    let html = `<table class="log-table">
+      <colgroup>
+        <col style="width:50%">
+        <col style="width:50%">
+      </colgroup>
+      <tbody>`;
+
+    let partIndex = -1;
+    let hasPart = false;
+    let ingredientInputCount = 0;
+
+    ingr.forEach((raw, idx) => {
+      const line = String(raw || '').trim();
+      if(!line) return;
+
+      if(isServingsLine(line)){
+        html += `<tr class="serving-row"><td colspan="2">${escapeHtml(line)}</td></tr>`;
+        return;
+      }
+
+      const isPart = !line.startsWith('・');
+      if(isPart){
+        partIndex++;
+        hasPart = true;
+        html += `
+          <tr class="part-row"><td colspan="2">${escapeHtml(line)}</td></tr>
+          <tr>
+            <th>材料・分量</th>
+            <th>当日変更</th>
+          </tr>`;
+      }else{
+        const showExample = ingredientInputCount === 0;
+        ingredientInputCount++;
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(line)}</strong></td>
+            <td>${renderInput(52, `ing-${idx}-today`, showExample ? '例：200mlに変更' : '')}</td>
+          </tr>`;
+      }
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function renderMethods(methods){
+    if(!methods || !methods.length){
+      return '<div class="reference-box text-gray-400">調理方法情報がありません</div>';
+    }
+
+    return methods.map((m, idx) => {
+      const showExample = idx === 0;
+      return `
+      <div class="method-step">
+        <div class="method-title">【${escapeHtml(m.id)}】 ${escapeHtml(m.title)}</div>
+        <div class="method-lines">
+          ${(m.steps || []).map(s => `<div class="method-line">${escapeHtml(s)}</div>`).join('')}
+        </div>
+
+        <div class="method-grid">
+          <div class="method-mini">
+            <span class="mini-label">仮説・懸念</span>
+            <div class="mini-text">${escapeHtml(m.hypothesis || 'この工程に該当する事項なし。')}</div>
+          </div>
+          <div class="method-mini">
+            <span class="mini-label">検証ポイント</span>
+            <div class="mini-text">${escapeHtml(m.tasting || 'この工程に該当する事項なし。')}</div>
+          </div>
+        </div>
+
+        <div>
+          <span class="field-label">調理中メモ</span>
+          <span class="field-help">起きたこと／変えたこと／変えた理由／味見結果・状態変化を自由に記入</span>
+          ${renderInput(92, `meth-${idx}-memo`, showExample ? '例：鍋底が焦げそうだったので火を弱めた。煮詰まりが早く、途中で水を30ml追加。' : '')}
+        </div>
+      </div>
+    `;
+    }).join('');
+  }
+
+  function sectionTitle(num, title){
+    return `<div class="section-title"><span class="num">${escapeHtml(num)}</span><span>${escapeHtml(title)}</span></div>`;
+  }
+
+  function renderAnalysisFields(){
+    const axes = [
+      {
+        id:'rashisa',
+        title:'らしさ',
+        help:'この料理らしさを成立させる条件、主役パーツ、サポートパーツの扱いを整理します。',
+        placeholders:{
+          keep:'例：肉を主役にして、赤ワインソースは濃厚な方向で維持する。',
+          correct:'例：ソースが「これをフレンチ」と感じるほどの深みになるよう、香味野菜と煮詰めを見直す。',
+          reduce:'例：マッシュポテトの甘さが主役感を邪魔するなら弱める。',
+          try:'例：仕上げに赤ワインを煮詰めたソースを少量加え、らしさが強まるか検証する。'
+        }
+      },
+      {
+        id:'koku',
+        title:'コク',
+        help:'うま味、風味、油脂、塩味、甘味など、厚みや余韻に関わる要素を整理します。',
+        placeholders:{
+          keep:'例：肉のうま味とバターの丸みは残す。',
+          correct:'例：赤ワインソースのコクが足りないので、煮詰め濃度と塩味の位置を見直す。',
+          reduce:'例：マッシュポテトのバター感が重い場合は弱める。',
+          try:'例：煮詰め後のソース量に対してバター比率を変えて、余韻の厚みを検証する。'
+        }
+      },
+      {
+        id:'contrast',
+        title:'コントラスト',
+        help:'食感、風味、味の特徴の対比や、口に入れた前後・咀嚼中・余韻の変化を整理します。',
+        placeholders:{
+          keep:'例：柔らかい肉と滑らかなマッシュポテトの一体感は残す。',
+          correct:'例：全体が重く単調なので、余韻に軽い酸味か香りの抜けを作る。',
+          reduce:'例：ソースとマッシュポテトが混ざった時の重さを削ぐ。',
+          try:'例：仕上げに山椒または少量の酸味を入れて、余韻の切れを検証する。'
+        }
+      }
+    ];
+
+    return `
+      <div class="fix-matrix-wrap">
+        ${axes.map(axis => `
+          <div class="fix-axis-block">
+            <div class="fix-axis-title">${axis.title}</div>
+            <div class="px-4 pt-3 text-[11px] font-bold text-gray-500 leading-relaxed">${axis.help}</div>
+
+            <div class="hidden md:grid grid-cols-4 mt-3 border-t border-gray-200">
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-r border-b border-gray-300">活かす</div>
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-r border-b border-gray-300">直す</div>
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-r border-b border-gray-300">削ぐ</div>
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-b border-gray-300">試したいこと</div>
+
+              <div class="p-2.5 border-r border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-ikas`, axis.placeholders.keep)}
+              </div>
+              <div class="p-2.5 border-r border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-naosu`, axis.placeholders.correct)}
+              </div>
+              <div class="p-2.5 border-r border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-sogu`, axis.placeholders.reduce)}
+              </div>
+              <div class="p-2.5">
+                ${renderInput(92, `analysis-${axis.id}-try`, axis.placeholders.try)}
+              </div>
+            </div>
+
+            <div class="grid md:hidden grid-cols-1 mt-3 border-t border-gray-200">
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-b border-gray-300">活かす</div>
+              <div class="p-3 border-b border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-ikas-mobile`, axis.placeholders.keep)}
+              </div>
+
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-b border-gray-300">直す</div>
+              <div class="p-3 border-b border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-naosu-mobile`, axis.placeholders.correct)}
+              </div>
+
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-b border-gray-300">削ぐ</div>
+              <div class="p-3 border-b border-gray-200">
+                ${renderInput(92, `analysis-${axis.id}-sogu-mobile`, axis.placeholders.reduce)}
+              </div>
+
+              <div class="bg-gray-100 text-gray-900 text-[13px] font-black p-3 border-b border-gray-300">試したいこと</div>
+              <div class="p-3">
+                ${renderInput(92, `analysis-${axis.id}-try-mobile`, axis.placeholders.try)}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderUndecidedFields(){
+    return `
+      <div class="undecided-card" style="max-width:none;">
+        <span class="field-label">AIに提案してほしいこと</span>
+        <span class="field-help">自分では決めきれない調整案や代替案</span>
+        ${renderInput(140, 'undecided-ai-proposal', '例：赤ワイン感を強めながら酸味を立てすぎない方法を提案してほしい。')}
+      </div>
+    `;
+  }
+
+  function applyFirstOnlyPlaceholders(){
+    const rules = [
+      { selector:'textarea[data-save-key^="ing-"][data-save-key$="-today"]', text:'例：200mlに変更' },
+      { selector:'textarea[data-save-key^="ing-"][data-save-key$="-next"]', text:'例：煮込み用は200ml、仕上げ用に煮詰めた赤ワイン30mlを追加' },
+      { selector:'textarea[data-save-key^="addmat-"][data-save-key$="-today"]', text:'例：赤ワイン 50mlを追加' },
+      { selector:'textarea[data-save-key^="addmat-"][data-save-key$="-next"]', text:'例：仕上げ用として赤ワイン50mlを残す' },
+      { selector:'textarea[data-save-key^="meth-"][data-save-key$="-memo"]', text:'例：鍋底が焦げそうだったので火を弱めた。煮詰まりが早く、途中で水を30ml追加。' },
+      { selector:'textarea[data-save-key^="meth-"][data-save-key$="-next"]', text:'例：煮込み開始20分後に一度水分量を確認し、必要なら水30mlを加える' }
+    ];
+
+    rules.forEach(rule => {
+      const targets = Array.from(document.querySelectorAll(rule.selector));
+      targets.forEach((el, idx) => {
+        el.setAttribute('placeholder', idx === 0 ? rule.text : '');
+      });
+    });
+  }
+
+  function renderSheet(data, user, date){
+    data = normalizeParsedData(data);
+    const container = $('sheet-content');
+    if(!container) return;
+
+    container.innerHTML = `
+      <header class="sheet-header">
+        <div class="sheet-logo-group">
+          <div class="sheet-logo">EDICODE</div>
+          <div class="sheet-subtitle">調理・実食ログシート</div>
+        </div>
+        <div>
+          <div class="sheet-title">${escapeHtml(data.dish || '名称未設定')}</div>
+          <div class="sheet-meta">
+            USER: ${escapeHtml(user || '未設定')} / DATE: ${escapeHtml(date || '')}<br>
+            TXT: ${escapeHtml(uploadedFileName || '未設定')}
+          </div>
+        </div>
+      </header>
+
+      <section class="section">
+        ${sectionTitle('01','素案からの修正点・今回の検証テーマ')}
+        <div class="reference-box">${escapeHtml(data.mods || '特記事項なし')}</div>
+      </section>
+
+      <section class="section">
+        <div class="accordion-card">
+          <div class="accordion-header" role="button" tabindex="0" data-accordion-target="section-goal">
+            <span>02 料理のゴール設計</span>
+            <span class="accordion-icon">▲</span>
+          </div>
+          <div id="section-goal" class="accordion-body">
+            ${formatGoalSummary(data.goal)}
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-03-page-break">
+        ${sectionTitle('03','材料・分量の検証ログ')}
+        <p class="subtle-lead">「当日変更」には調理中に調整した材料や分量を記入し、「次回反映事項」には、次回レシピに反映すると決めた材料・分量だけを書いてください。迷っている内容は08「未決事項・AIへの相談」に書きます。</p>
+        ${renderIngredientTable(data.ingr)}
+      </section>
+
+      <section class="section">
+        ${sectionTitle('04','調理工程ごとの検証ログ')}
+        <p class="subtle-lead">「調理中メモ」は調理中の事実のみを記入し、「次回反映事項」には次回レシピに反映すると決めた調理工程を書いてください。迷っている内容は08「未決事項・AIへの相談」に書きます。</p>
+        ${renderMethods(data.meth)}
+      </section>
+
+      <div class="post-cook-divider" role="button" tabindex="0" id="post-cook-toggle" aria-expanded="false" aria-controls="post-cook-content">
+        <div class="post-cook-divider-top">
+          <div class="post-cook-divider-title">ここからは、調理後・食後に記入</div>
+          <span class="post-cook-toggle-label">開く ▼</span>
+        </div>
+        <div class="post-cook-divider-text">
+          ここからは、想定シチュエーションに沿って客観的に完成した料理を捉え、ゴールとの差分を整理し、美味しさの3軸に沿って次回設計方針を精査していきます。
+          <span class="post-cook-open-hint">このボタンを押すと、05〜08の調理後入力欄が開きます。</span>
+        </div>
+      </div>
+
+      <div id="post-cook-content" class="post-cook-content hidden">
+      <section class="section" id="section-05">
+        ${sectionTitle('05','【振り返り】完成品の第一印象')}
+        <p class="subtle-lead">調理後、完成品を食べてすぐ感じたことを、良い・悪いに分けず自由に書いてください。パーツごとの印象や想定した食べ方とのズレも含めてOKです。</p>
+        ${renderInput(140, 'final-first-impression', '例：全体としては方向性は近いが、ソースの香りが弱く、マッシュポテトが少し重い。')}
+      </section>
+
+      <section class="section" id="section-06">
+        ${sectionTitle('06','【振り返り】ゴール到達度・ゴール見直し')}
+        <p class="subtle-lead">02で確認した「料理のゴール設計」を見返しながら、完成した料理がそのゴールにどこまで届いたかを振り返ります。第一印象だけで判断せず、想定シチュエーション、食べ手の期待、価格イメージ、ビジュアル、らしさ、コク、コントラストと照らし合わせて考えてください。ここではレシピの修正だけでなく、最初に決めた料理のゴール自体を見直す必要があるかも確認します。</p>
+
+        <div class="mb-5 content-group">
+          <span class="field-label">設定した料理のゴールに対する到達度</span>
+          ${renderChoices('goal-arrival-level', ['OK','かなり近い','一部近い','ズレがある','判断できない'])}
+          <span class="field-label">そう評価した理由</span>
+          ${renderInput(110, 'goal-arrival-reason', '例：肉の柔らかさは近いが、赤ワインソースの香りと余韻が弱く、想定より日常寄りに感じた。')}
+        </div>
+
+        <div class="content-group">
+          <span class="field-label">料理のゴール自体を見直す必要があるか</span>
+          ${renderChoices('goal-revision-needed', ['不要','必要','保留','判断できない','次回確認'])}
+          <span class="field-label">見直すなら何を変えるか・その理由</span>
+          ${renderInput(110, 'goal-revision-detail', '例：ゴール自体は変えない。赤ワインの風味を出す設計の方を見直す。')}
+        </div>
+      </section>
+
+      <section class="section" id="section-07">
+        ${sectionTitle('07','【方針整理】美味しさの3軸別｜次回設計方針の精査')}
+        <p class="subtle-lead">ここは思考を整理するためのメモ欄です。次回レシピへの決定事項は、03・04の「次回反映事項」に書いてください。</p>
+        ${renderAnalysisFields()}
+      </section>
+
+      <section class="section" id="section-08">
+        ${sectionTitle('08','【未決事項】AIへの相談')}
+        <p class="subtle-lead">まだ決めきれていないこと、AIに提案してほしいこと、比較したい案を書きます。</p>
+        ${renderUndecidedFields()}
+      </section>
+      </div>
+    `;
+    document.querySelectorAll('.accordion-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const body = $(btn.dataset.accordionTarget);
+        if(!body) return;
+        body.classList.toggle('hidden');
+        const icon = btn.querySelector('.accordion-icon');
+        if(icon) icon.textContent = body.classList.contains('hidden') ? '▼' : '▲';
+      });
+    });
+
+    const postCookToggle = $('post-cook-toggle');
+    const postCookContent = $('post-cook-content');
+    if(postCookToggle && postCookContent){
+      postCookToggle.addEventListener('click', () => {
+        const isHidden = postCookContent.classList.toggle('hidden');
+        postCookToggle.setAttribute('aria-expanded', String(!isHidden));
+        const label = postCookToggle.querySelector('.post-cook-toggle-label');
+        if(label) label.textContent = isHidden ? '開く ▼' : '閉じる ▲';
+
+        if(!isHidden){
+          postCookContent.querySelectorAll('textarea.box-input').forEach(autoResizeTextarea);
+          postCookContent.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+        scheduleAutoSave();
+      });
+    }
+
+    applyFirstOnlyPlaceholders();
+    attachLiveInputEvents();
+  }
+
+  function autoResizeTextarea(el){
+    if(!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+
+    const scrollHeight = el.scrollHeight;
+    const minHeight = parseInt(el.style.minHeight || el.getAttribute('data-min-height') || 70, 10);
+
+    el.style.height = Math.max(scrollHeight, minHeight) + 'px';
+  }
+
+  function attachLiveInputEvents(){
+    document.querySelectorAll('textarea.box-input').forEach(el => {
+      autoResizeTextarea(el);
+
+      el.addEventListener('input', (e) => {
+        autoResizeTextarea(el);
+
+        const key = el.getAttribute('data-save-key');
+        if (key) {
+           let targetKey = '';
+           if (key.endsWith('-mobile')) {
+             targetKey = key.replace('-mobile', '');
+           } else {
+             targetKey = key + '-mobile';
+           }
+
+           const targetEl = document.querySelector(`textarea[data-save-key="${targetKey}"]`);
+           if (targetEl && targetEl.value !== e.target.value) {
+              targetEl.value = e.target.value;
+              autoResizeTextarea(targetEl);
+           }
+        }
+
+        scheduleAutoSave();
+      }, { passive: true });
+
+      el.addEventListener('blur', () => {
+        setTimeout(() => autoResizeTextarea(el), 100);
+      });
+    });
+
+    document.querySelectorAll('input[type="radio"]').forEach(el => {
+      el.addEventListener('change', scheduleAutoSave);
+    });
+  }
+
+  function scheduleAutoSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try{
+        if(!currentData) return;
+        const drafts = getAllDrafts();
+        drafts['live'] = {
+          id:'live',
+          name: createDefaultDraftName() + '_自動保存',
+          date:currentDate,
+          user:currentUser,
+          mode:currentMode,
+          rawText:currentRawText,
+          fileName:uploadedFileName,
+          parsedData:normalizeParsedData(currentData),
+          inputValues:collectInputValues(),
+          updatedAt:new Date().toISOString()
+        };
+        saveDrafts(drafts);
+        updateInitialScreenDraftButton();
+      }catch(e){
+        console.error('オートセーブエラー:', e);
+      }
+    }, 400);
+  }
+
+  function handleFile(file){
+    if(!file) return;
+    if(!file.name.toLowerCase().endsWith('.txt')){
+      showToast('TXTファイルを選択してください');
+      return;
+    }
+
+    uploadedFileName = file.name;
+    const display = $('file-display');
+    if (display) {
+      display.textContent = file.name;
+      display.classList.remove('hidden');
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentRawText = e.target.result || '';
+      currentData = parseRecipeTxt(currentRawText);
+      showToast('TXTを読み込みました');
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // ===== 初期化 =====
+    storageAvailable = checkStorageAvailable();
+    if (!storageAvailable) {
+      showToast('⚠️ このブラウザではプライベートモード対応で、タブを閉じるとデータがリセットされます。');
+    }
+
+    initSaveMenu();
+
+    const manualDateEl = document.getElementById('manual-date');
+    if (manualDateEl) {
+      manualDateEl.value = new Date().toISOString().split('T')[0];
+    }
+
+    updateInitialScreenDraftButton();
+
+    document.querySelectorAll('input[name="usage-mode"]').forEach(r => {
+      r.addEventListener('change', e => currentMode = e.target.value);
+    });
+
+    const inputFileEl = document.getElementById('input-file');
+    if (inputFileEl) {
+      inputFileEl.addEventListener('change', e => handleFile(e.target.files[0]));
+    }
+
+    const dz = document.getElementById('drop-zone');
+    if (dz) {
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('border-[#182349]'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('border-[#182349]'));
+      dz.addEventListener('drop', e => {
+        e.preventDefault();
+        dz.classList.remove('border-[#182349]');
+        if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    const createBtn = document.getElementById('createBtn');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        const manualUsernameEl = document.getElementById('manual-username');
+        currentUser = (manualUsernameEl ? manualUsernameEl.value.trim() : '') || '未設定';
+        const dateEl = document.getElementById('manual-date');
+        currentDate = (dateEl ? dateEl.value : '') || new Date().toISOString().split('T')[0];
+        const modeEl = document.querySelector('input[name="usage-mode"]:checked');
+        currentMode = modeEl ? modeEl.value : 'handwriting';
+
+        if(!currentData){
+          showToast('先に検証用レシピTXTをアップロードしてください');
+          return;
+        }
+
+        currentDraftId = null;
+        currentDraftName = '';
+
+        renderSheet(currentData, currentUser, currentDate);
+
+        const setupScreen = document.getElementById('setup-screen');
+        if (setupScreen) setupScreen.classList.add('hidden');
+
+        const outputScreen = document.getElementById('output-screen');
+        if (outputScreen) outputScreen.classList.remove('hidden');
+
+        const stickyMenu = document.getElementById('sticky-menu');
+        if (stickyMenu) stickyMenu.classList.remove('hidden');
+
+        updateSaveStatus(null);
+        window.scrollTo(0,0);
+      });
+    }
+
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        const outputScreen = document.getElementById('output-screen');
+        if (outputScreen) outputScreen.classList.add('hidden');
+
+        const stickyMenu = document.getElementById('sticky-menu');
+        if (stickyMenu) stickyMenu.classList.add('hidden');
+
+        const setupScreen = document.getElementById('setup-screen');
+        if (setupScreen) setupScreen.classList.remove('hidden');
+
+        updateInitialScreenDraftButton();
+        window.scrollTo(0,0);
+      });
+    }
+
+    const cancelSaveBtn = document.getElementById('cancel-save-modal-btn');
+    if (cancelSaveBtn) {
+      cancelSaveBtn.addEventListener('click', () => closeModal('save-modal'));
+    }
+    const closeDraftBtn = document.getElementById('close-draft-list-btn');
+    if (closeDraftBtn) {
+      closeDraftBtn.addEventListener('click', () => closeModal('draft-list-modal'));
+    }
+
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', async () => {
+
+        if (!window.html2canvas || !window.jspdf) {
+          showToast('PDF生成の準備をしています...');
+          try {
+            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+          } catch (e) {
+            showToast('ライブラリの読み込みに失敗しました。');
+            return;
+          }
+        }
+
+        showToast('PDFを生成しています。数秒お待ちください...');
+        const printBtnEl = document.getElementById('printBtn');
+        if (printBtnEl) {
+          printBtnEl.disabled = true;
+          printBtnEl.textContent = 'PDF生成中...';
+        }
+
+        const container = document.getElementById('sheet-content');
+        if (!container) {
+           showToast('コンテンツが見つかりません');
+           if (printBtnEl) { printBtnEl.disabled = false; printBtnEl.textContent = 'PDF保存 / 印刷'; }
+           return;
+        }
+
+        const postCookContent = document.getElementById('post-cook-content');
+        const wasPostCookHidden = postCookContent ? postCookContent.classList.contains('hidden') : false;
+        const accordionStates = [];
+
+        document.querySelectorAll('.accordion-body').forEach(el => {
+          accordionStates.push({ el, isHidden: el.classList.contains('hidden') });
+          el.classList.remove('hidden');
+        });
+        if (postCookContent) postCookContent.classList.remove('hidden');
+
+        document.body.classList.add('exporting-pdf');
+
+        // textarea を div に一時置換（html2canvas はtextareaの非表示部分をキャプチャできないため）
+        const textareaReplacements = [];
+        container.querySelectorAll('textarea.box-input').forEach(el => {
+          const div = document.createElement('div');
+          // クラスとスタイルを引き継ぐ
+          div.className = el.className;
+          div.style.cssText = el.style.cssText;
+          div.style.height = 'auto';
+          div.style.minHeight = (el.getAttribute('data-min-height') || '70') + 'px';
+          div.style.overflow = 'visible';
+          div.style.whiteSpace = 'pre-wrap';
+          div.style.wordBreak = 'break-word';
+          div.style.overflowWrap = 'break-word';
+          div.style.resize = 'none';
+          div.style.display = 'block';
+          // テキスト内容をセット（空なら空文字）
+          div.textContent = el.value || '';
+          el.parentNode.insertBefore(div, el);
+          el.style.display = 'none';
+          textareaReplacements.push({ original: el, replacement: div });
+        });
+
+        // リフロー完了を待つ
+        await new Promise(r => setTimeout(r, 600));
+
+        try {
+          const canvas = await window.html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            ignoreElements: (node) => {
+              if (node.tagName) {
+                const tag = node.tagName.toLowerCase();
+                if (tag === 'img' || tag === 'iframe') {
+                  return true;
+                }
+              }
+              return false;
+            }
+          });
+
+          const jsPDFConstructor = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+          if (!jsPDFConstructor) throw new Error("PDFライブラリ未定義");
+
+          const pdf = new jsPDFConstructor('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const marginMm = 12;
+          const usablePdfHeight = pdfHeight - marginMm * 2;
+
+          const ratio = pdfWidth / canvas.width;
+          const usableHeightPx = Math.floor(usablePdfHeight / ratio);
+
+          const containerRect = container.getBoundingClientRect();
+          const scale = 2;
+
+          const getCanvasY = (rect) => (rect.top - containerRect.top) * scale;
+          const getCanvasHeight = (rect) => rect.height * scale;
+
+          const protectSelectors = [
+            '.sheet-header',
+            '.goal-block',
+            'table.log-table tr',  // テーブル全体ではなく行単位で保護
+            '.method-step',
+            '.fix-axis-block',
+            '.undecided-note',
+            '.undecided-card',
+            '.reference-box',
+            '.note-grid > div',
+            '.plain-box',
+            '.content-group'
+          ];
+
+          const protectZones = Array.from(container.querySelectorAll(protectSelectors.join(',')))
+            .filter(el => {
+              const rect = el.getBoundingClientRect();
+              return rect && rect.height > 0 && !isNaN(rect.top) && !isNaN(rect.bottom);
+            })
+            .map(el => {
+              const rect = el.getBoundingClientRect();
+              return {
+                top: getCanvasY(rect),
+                bottom: getCanvasY(rect) + getCanvasHeight(rect)
+              };
+            })
+            // 1ページの80%を超える要素は保護対象外（自体が1ページに収まらない）
+            .filter(zone => (zone.bottom - zone.top) < usableHeightPx * 0.8)
+            .sort((a, b) => a.top - b.top);
+
+          let dividerY = -1;
+          let break06Y = -1;
+          let break07Y = -1;
+          let break08Y = -1;
+
+          const divider = document.getElementById('post-cook-toggle');
+          if(divider) {
+            const r = divider.getBoundingClientRect();
+            if(r && r.height > 0 && !isNaN(r.top)) dividerY = getCanvasY(r) - (10 * scale);
+          }
+          const sec06 = document.getElementById('section-06');
+          if (sec06) {
+            const r = sec06.getBoundingClientRect();
+            if(r && r.height > 0 && !isNaN(r.top)) break06Y = getCanvasY(r) - (10 * scale);
+          }
+          const sec07 = document.getElementById('section-07');
+          if (sec07) {
+            const r = sec07.getBoundingClientRect();
+            if(r && r.height > 0 && !isNaN(r.top)) break07Y = getCanvasY(r) - (10 * scale);
+          }
+          const sec08 = document.getElementById('section-08');
+          if (sec08) {
+            const r = sec08.getBoundingClientRect();
+            if(r && r.height > 0 && !isNaN(r.top)) break08Y = getCanvasY(r) - (10 * scale);
+          }
+
+          const forceBreaks = [dividerY, break06Y, break07Y, break08Y]
+                              .filter(y => typeof y === 'number' && !isNaN(y) && y > 0 && y < 999999)
+                              .sort((a, b) => a - b);
+
+          const pageBreaks = [];
+          let startY = 0;
+
+          while (startY < canvas.height) {
+            let cutY = startY + usableHeightPx;
+
+            if (cutY >= canvas.height) {
+              pageBreaks.push({ start: startY, end: canvas.height });
+              break;
+            }
+
+            const nextForceBreak = forceBreaks.find(y => y > startY + (usableHeightPx * 0.1) && y <= cutY);
+
+            if (nextForceBreak) {
+              cutY = nextForceBreak;
+            } else {
+              const hitZone = protectZones.find(z => z.top < cutY && z.bottom > cutY);
+              if (hitZone && hitZone.top > startY) {
+                cutY = hitZone.top - (5 * scale);
+              }
+            }
+
+            if (cutY <= startY + 20) {
+              cutY = startY + usableHeightPx;
+            }
+
+            cutY = isNaN(cutY) ? startY + usableHeightPx : Math.floor(cutY);
+
+            pageBreaks.push({ start: startY, end: cutY });
+            startY = cutY;
+          }
+
+          for (let i = 0; i < pageBreaks.length; i++) {
+            if (i > 0) pdf.addPage();
+
+            const pb = pageBreaks[i];
+            let pageCanvasHeight = pb.end - pb.start;
+            if (isNaN(pageCanvasHeight) || pageCanvasHeight <= 0) pageCanvasHeight = 1;
+
+            const pageCanvas = document.createElement('canvas');
+            pageCanvas.width = canvas.width;
+            pageCanvas.height = pageCanvasHeight;
+            const ctx = pageCanvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+            ctx.drawImage(
+              canvas,
+              0, pb.start, canvas.width, pageCanvasHeight,
+              0, 0, pageCanvas.width, pageCanvasHeight
+            );
+
+            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+            const currentPdfPageHeight = pageCanvasHeight * ratio;
+
+            pdf.addImage(pageImgData, 'JPEG', 0, marginMm, pdfWidth, currentPdfPageHeight);
+          }
+
+          const dateStr = String(currentDate || new Date().toISOString().split('T')[0]).replace(/-/g,'');
+          const cleanUser = String(currentUser || '未設定').replace(/[/\?%*:|"<>\s]/g, '_');
+          const fileName = `【${cleanUser}】調理実食ログ_${dateStr}.pdf`;
+
+          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.share) {
+            const pdfBlob = pdf.output('blob');
+            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+            try {
+              await navigator.share({ files: [file], title: '調理・実食ログシート' });
+            } catch (e) {
+              pdf.save(fileName);
+            }
+          } else {
+            pdf.save(fileName);
+          }
+
+          showToast('PDFを保存しました');
+        } catch (error) {
+          console.error('PDF生成エラー:', error);
+          showToast('エラー: ' + (error.message || 'PDFの生成に失敗しました'));
+        } finally {
+          document.body.classList.remove('exporting-pdf');
+
+          // textarea を元に戻す（div を削除し textarea を再表示）
+          textareaReplacements.forEach(({ original, replacement }) => {
+            original.style.display = '';
+            if (replacement.parentNode) replacement.parentNode.removeChild(replacement);
+            autoResizeTextarea(original);
+          });
+
+          const postCookContentEl = document.getElementById('post-cook-content');
+          if (postCookContentEl && wasPostCookHidden) postCookContentEl.classList.add('hidden');
+          accordionStates.forEach(state => {
+            if (state.isHidden && state.el) state.el.classList.add('hidden');
+          });
+
+          const printBtnEl = document.getElementById('printBtn');
+          if (printBtnEl) {
+            printBtnEl.disabled = false;
+            printBtnEl.textContent = 'PDF保存 / 印刷';
+          }
+        }
+      });
+    }
+
+    const modalConfirmSaveBtn = document.getElementById('modal-confirm-save-btn');
+    if (modalConfirmSaveBtn) {
+      modalConfirmSaveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.confirmSave();
+      });
+    }
+  });
+</script>
+</body>
+</html>
